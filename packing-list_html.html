@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Packing List</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--pink:#e8547a;--pink-light:#fce8ee;--green:#3dba7e;--green-light:#e6f8f0;--text:#2c2c2c;--muted:#999;--border:#ece8e1;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:var(--text);color:#fff;padding:20px 20px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.15);}
+.header h1{font-family:'Playfair Display',serif;font-size:1.4rem;}
+.header h1 span{color:var(--pink);}
+.prog-wrap{margin-top:8px;background:rgba(255,255,255,.15);border-radius:99px;height:5px;overflow:hidden;}
+.prog-bar{height:100%;background:var(--pink);border-radius:99px;transition:width .4s;}
+.prog-label{font-size:.7rem;color:rgba(255,255,255,.55);margin-top:4px;}
+.header-btns{display:flex;gap:8px;margin-top:10px;}
+.hbtn{flex:1;padding:7px 6px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.hbtn-filter{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);}
+.hbtn-filter.on{background:var(--pink);color:#fff;}
+.hbtn-reset{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);}
+.hbtn-reset:hover{background:#e00525;color:#fff;}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:112px;z-index:90;overflow-x:auto;}
+.tab{flex:1;min-width:70px;padding:11px 6px;text-align:center;font-size:.82rem;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--muted);white-space:nowrap;transition:all .2s;}
+.tab.active{color:var(--pink);border-bottom-color:var(--pink);}
+.tab-add{padding:11px 14px;color:var(--pink);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.page{padding:14px 12px 80px;}
+.section{margin-bottom:16px;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.07);}
+.sec-head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border);}
+.sec-title{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--pink);flex:1;}
+.sec-count{font-size:.7rem;color:var(--muted);background:var(--pink-light);padding:2px 8px;border-radius:99px;white-space:nowrap;}
+.sec-del{background:none;border:none;color:#ccc;font-size:.85rem;cursor:pointer;padding:2px 4px;line-height:1;}
+.sec-del:hover{color:var(--pink);}
+.item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);transition:background .15s;user-select:none;position:relative;}
+.item:last-child{border-bottom:none;}
+.item.checked{background:var(--green-light);}
+.item.checked .item-text{text-decoration:line-through;color:var(--muted);}
+.drag-handle{color:#ccc;font-size:1rem;cursor:grab;padding:0 2px;flex-shrink:0;touch-action:none;}
+.drag-handle:active{cursor:grabbing;}
+.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;transition:all .2s;cursor:pointer;}
+.item.checked .chk{background:var(--green);border-color:var(--green);}
+.chk-mark{display:none;color:#fff;font-size:12px;font-weight:700;}
+.item.checked .chk-mark{display:block;}
+.item-text{font-size:.83rem;line-height:1.4;flex:1;cursor:text;}
+.item-edit-input{font-size:.83rem;line-height:1.4;flex:1;border:none;border-bottom:2px solid var(--pink);outline:none;background:transparent;font-family:'DM Sans',sans-serif;color:var(--text);padding:1px 0;}
+.item-actions{display:flex;gap:2px;flex-shrink:0;}
+.icon-btn{background:none;border:none;color:#ccc;font-size:.82rem;cursor:pointer;padding:2px 4px;line-height:1;opacity:0;transition:opacity .15s;}
+.item:hover .icon-btn{opacity:1;}
+.icon-btn:hover{color:var(--pink);}
+.edit-hint{font-size:.65rem;color:#bbb;padding:0 14px 6px;font-style:italic;}
+.add-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px dashed var(--border);background:#fafafa;}
+.add-input{flex:1;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:.83rem;color:var(--text);outline:none;}
+.add-input::placeholder{color:#bbb;}
+.add-btn{background:var(--pink);color:#fff;border:none;border-radius:7px;width:26px;height:26px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.add-btn:disabled{background:#eee;color:#bbb;cursor:default;}
+.add-cat-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:var(--card);border-radius:14px;border:2px dashed var(--border);color:var(--pink);font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:500;cursor:pointer;margin-bottom:16px;transition:all .2s;box-shadow:0 2px 14px rgba(0,0,0,.07);}
+.add-cat-btn:hover{border-color:var(--pink);background:var(--pink-light);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:26px 20px 38px;width:100%;max-width:500px;}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.05rem;margin-bottom:6px;}
+.modal p{font-size:.8rem;color:var(--muted);margin-bottom:14px;}
+.modal-input{width:100%;border:2px solid var(--border);border-radius:10px;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;margin-top:8px;}
+.modal-input:focus{border-color:var(--pink);}
+.modal-actions{display:flex;gap:10px;margin-top:13px;}
+.btn-confirm{flex:1;background:var(--pink);color:#fff;border:none;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;}
+.btn-confirm:disabled{background:#eee;color:#bbb;cursor:default;}
+.btn-cancel{flex:1;background:var(--bg);color:var(--muted);border:2px solid var(--border);border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer;}
+.btn-danger{background:#e00525!important;}
+.cat-select{display:flex;flex-direction:column;gap:8px;margin-top:10px;max-height:300px;overflow-y:auto;}
+.cat-option{padding:11px 13px;border:2px solid var(--border);border-radius:10px;cursor:pointer;font-size:.88rem;transition:all .15s;}
+.cat-option:hover{border-color:var(--pink);background:var(--pink-light);}
+.masked-note{padding:8px 14px;font-size:.75rem;color:var(--muted);font-style:italic;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const STORAGE_KEY='packing-v7';
+
+const INITIAL={
+  activeTab:0,
+  hideChecked:false,
+  tabs:[
+    {
+      id:'moi',label:'Moi',
+      categories:[
+        {id:'km',name:'Kleeder',items:[
+          {id:'km1',text:'Roupas x mudas',checked:false},
+          {id:'km2',text:'Roupa interior (meias, cuecas, StillBH), Tops Stillen',checked:false},
+          {id:'km3',text:'Pijama Stillen, creme peitos, collants',checked:false},
+          {id:'km4',text:'Roupa praia, bikinis, saco, chinelos, toalhas',checked:false},
+          {id:'km5',text:'Cintos, muchilas, saco de mao, saco thermico',checked:false},
+          {id:'km6',text:'Sapatos, chinelos, sendalias',checked:false},
+          {id:'km7',text:'Casacos, calcas?, casaca Droh, Schal, Mutz, Hannchen',checked:false},
+          {id:'km8',text:'Oculos de sol, bijoux, brincos, relogios',checked:false},
+          {id:'km9',text:'Medicamentos, lencos, vitaminen Stillen',checked:false},
+          {id:'km10',text:'Aparelho cyclo, OB/Binden, Stilleinlagen, Kondom',checked:false},
+        ]},
+        {id:'hm',name:'Hygiene',items:[
+          {id:'hm1',text:'Cremes solares (avant & apres soleil)',checked:false},
+          {id:'hm2',text:'Cabelo: molas, elasticos, pente, laca, esticador, shampoo, amaceador, protecao, mascara, oleo',checked:false},
+          {id:'hm3',text:'Dentes: colgate, escovas, fio dental, akku',checked:false},
+          {id:'hm4',text:'WC: leite corpo, depil, cremes e produtos cara, creme maos, deo, sabao corpo, creme pes',checked:false},
+          {id:'hm5',text:'Schmink: Rimmel, lapis, Augenbrauen, pinca, pos, pinseis, Batons, Ofschmink, Pads, perfumes',checked:false},
+          {id:'hm6',text:'Unhas: lima, vernis, cuticulos, outils, etc.',checked:false},
+        ]},
+        {id:'am',name:'Autres',items:[
+          {id:'am1',text:'Tablette & Akku, series eroflueden, Kopfhorer & Akku, Akkuluederen Handy, Trepieds & comando',checked:false},
+          {id:'am2',text:'Check-ins, BIs, documentos, cartas Visa, etc.',checked:false},
+          {id:'am3',text:'Dinheiro, Vouchers, reservatiounen Hotel, etc.',checked:false},
+        ]},
+      ]
+    },
+    {
+      id:'bobby',label:'Bobby',
+      categories:[
+        {id:'ab',name:'Autres',items:[
+          {id:'ab1',text:'Box',checked:false},
+          {id:'ab2',text:'Gurt',checked:false},
+          {id:'ab3',text:'Feuttuecher',checked:false},
+          {id:'ab4',text:'Croquettes',checked:false},
+          {id:'ab5',text:'Snacks',checked:false},
+          {id:'ab6',text:'Nassfutter',checked:false},
+          {id:'ab7',text:'Gamellen',checked:false},
+          {id:'ab8',text:'Copo',checked:false},
+          {id:'ab9',text:'Brinquedos agua',checked:false},
+          {id:'ab10',text:'Brinquedos fora',checked:false},
+          {id:'ab11',text:'Brinquedos dentro',checked:false},
+          {id:'ab12',text:'Flasch',checked:false},
+          {id:'ab13',text:'Kakabeutel',checked:false},
+          {id:'ab14',text:'Pass',checked:false},
+          {id:'ab15',text:'Kuehlmatte',checked:false},
+          {id:'ab16',text:'Tenda & sobrinha',checked:false},
+          {id:'ab17',text:'Cama',checked:false},
+          {id:'ab18',text:'Robe',checked:false},
+          {id:'ab19',text:'Lengt',checked:false},
+          {id:'ab20',text:'Harnais',checked:false},
+          {id:'ab21',text:'Maulkuerf',checked:false},
+          {id:'ab22',text:'Bandagen',checked:false},
+          {id:'ab23',text:'Desinfect',checked:false},
+          {id:'ab24',text:'Creme patas',checked:false},
+          {id:'ab25',text:'Windeln?',checked:false},
+          {id:'ab26',text:'Zeckenzange',checked:false},
+          {id:'ab27',text:'Snacktuut',checked:false},
+        ]},
+      ]
+    },
+    {
+      id:'leo',label:'Leo',
+      categories:[
+        {id:'kl',name:'Kleeder',items:[
+          {id:'kl1',text:'Roupas x mudas + reserva',checked:false},
+          {id:'kl2',text:'Roupa interior (bodies, meias, meias-calcas)',checked:false},
+          {id:'kl3',text:'Pijamas, Schlofsack, oleo lavendel',checked:false},
+          {id:'kl4',text:'Pampers piscina + reserva, roupa anti UV, chinelos, toalhas, protecao cabeca, robe, muchila, saco thermico, lencos, lingettes',checked:false},
+          {id:'kl5',text:'Sapatos, sendalias, boinas, oculos de sol',checked:false},
+          {id:'kl6',text:'Casacos, calcas, Babetes, fraldas, poncho, combis',checked:false},
+          {id:'kl7',text:'Brinquedos piscina / praia, tenda, sombrinha',checked:false},
+          {id:'kl8',text:'Garuco, luvas, chaile, botas, manta, Wollwalk',checked:false},
+        ]},
+        {id:'hl',name:'Hygiene',items:[
+          {id:'hl1',text:'Cremes solares (avant & apres soleil), perfume',checked:false},
+          {id:'hl2',text:'Dentes: colgate, escova, coisas rilhar',checked:false},
+          {id:'hl3',text:'WC: oleo amendoa, produtos cara / corpo, pente',checked:false},
+          {id:'hl4',text:'Unhas: lima, corta-unhas, etc.',checked:false},
+          {id:'hl5',text:'Komplett Weckeltasch + reserve Wickelunterlagen',checked:false},
+          {id:'hl6',text:'Pampers estadia toda, cotons',checked:false},
+          {id:'hl7',text:'Banho: cottonetes, toalhas, lavetes, shampoo & gel douche, wattepads pano, esponja, brinquedos, thermometro, cotonetes',checked:false},
+          {id:'hl8',text:'Outros: ohrenreiniger, nasensauger',checked:false},
+        ]},
+        {id:'al',name:'Autres',items:[
+          {id:'al1',text:'Dormir: Veilleuse & Akku, Rausfallschutz? Doudou, Tonie Box? Choupetta, etc. Routinen',checked:false},
+          {id:'al2',text:'Carro & saidas: Autossetz, Pousette, Droh, cadeira comer, Feuttuecher Auto, BI, cama Hotel, Kopfhorer, Foussack',checked:false},
+          {id:'al3',text:'Comer: papas, snacks, pratos & talheres, copos, sacos plastico, agua, thermos, garafas de agua, babetes come (normal & silicone)',checked:false},
+          {id:'al4',text:'Brinquedos fora & dentro, Spilltapis?',checked:false},
+          {id:'al5',text:'Medio: vit D, prod. Mosquitos, kuhl & warmepad, Traubenkissen, Pharmacia & medicamentos, suspositorios, desinfect, Zecken, Zann, Sirop, thermometer, etc.',checked:false},
+        ]},
+      ]
+    },
+  ]
+};
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function loadData(){
+  try{const s=localStorage.getItem(STORAGE_KEY);if(s)return JSON.parse(s);}catch(e){}
+  return JSON.parse(JSON.stringify(INITIAL));
+}
+
+function AddItemRow({onAdd}){
+  const [val,setVal]=useState('');
+  const submit=()=>{if(val.trim()){onAdd(val.trim());setVal('');}};
+  return(
+    <div className="add-row">
+      <input className="add-input" placeholder="Ajouter un article..." value={val}
+        onChange={e=>setVal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/>
+      <button className="add-btn" onClick={submit} disabled={!val.trim()}>+</button>
+    </div>
+  );
+}
+
+function ItemRow({item,onToggle,onEdit,onMove,onDelete,onDragStart,onDragOver,onDrop}){
+  const [editing,setEditing]=useState(false);
+  const [val,setVal]=useState(item.text);
+  const inputRef=useRef();
+
+  useEffect(()=>{if(editing&&inputRef.current)inputRef.current.focus();},[editing]);
+
+  function startEdit(e){
+    e.stopPropagation();
+    setVal(item.text);
+    setEditing(true);
+  }
+  function saveEdit(){
+    if(val.trim()&&val.trim()!==item.text) onEdit(val.trim());
+    setEditing(false);
+  }
+  function cancelEdit(){setVal(item.text);setEditing(false);}
+
+  return(
+    <div className={'item'+(item.checked?' checked':'')}
+      draggable={!editing}
+      onDragStart={editing?null:onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}>
+      <span className="drag-handle">&#9783;</span>
+      <div className="chk" onClick={onToggle}><span className="chk-mark">&#10003;</span></div>
+      {editing?(
+        <input ref={inputRef} className="item-edit-input" value={val}
+          onChange={e=>setVal(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter')saveEdit();if(e.key==='Escape')cancelEdit();}}
+          onBlur={saveEdit}
+          onClick={e=>e.stopPropagation()}/>
+      ):(
+        <span className="item-text" onDoubleClick={startEdit}>{item.text}</span>
+      )}
+      {!editing&&(
+        <div className="item-actions">
+          <button className="icon-btn" title="Modifier" onClick={startEdit}>&#9998;</button>
+          <button className="icon-btn" title="Deplacer" onClick={onMove}>&#8597;</button>
+          <button className="icon-btn" title="Supprimer" onClick={onDelete}>&#10005;</button>
+        </div>
+      )}
+      {editing&&(
+        <div className="item-actions">
+          <button className="icon-btn" style={{opacity:1,color:'var(--green)'}} onClick={saveEdit}>&#10003;</button>
+          <button className="icon-btn" style={{opacity:1}} onClick={cancelEdit}>&#10005;</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Modal({modal,onClose,onConfirm,categories}){
+  const [val,setVal]=useState('');
+  const ref=useRef();
+  useEffect(()=>{setVal('');setTimeout(()=>ref.current&&ref.current.focus(),80);},[modal]);
+  if(!modal)return null;
+  const needsInput=['add-item','add-cat','add-tab'].includes(modal.type);
+  const needsCatSelect=modal.type==='move-item';
+  const titles={'add-item':'Ajouter un article','add-cat':'Nouvelle categorie','add-tab':'Nouvel onglet','del-cat':'Supprimer cette categorie ?','del-item':'Supprimer cet article ?','reset-all':'Nouveau voyage'};
+  const placeholders={'add-item':"Nom de l'article...",'add-cat':'Nom de la categorie...','add-tab':'Ex: Tom, Jessy...'};
+  return(
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <h3>{titles[modal.type]}</h3>
+        {modal.type==='del-cat'&&<p>Tous les articles seront supprimes.</p>}
+        {modal.type==='reset-all'&&<p>Tous les articles coches seront remis a zero. Votre liste reste intacte.</p>}
+        {needsInput&&<input ref={ref} className="modal-input" placeholder={placeholders[modal.type]} value={val} onChange={e=>setVal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&val.trim()&&onConfirm(val)}/>}
+        {needsCatSelect&&(
+          <div className="cat-select">
+            {categories.filter(c=>c.id!==modal.catId).map(c=>(
+              <div key={c.id} className="cat-option" onClick={()=>onConfirm(c.id)}>{c.name}</div>
+            ))}
+          </div>
+        )}
+        {!needsCatSelect&&(
+          <div className="modal-actions">
+            <button className="btn-cancel" onClick={onClose}>Annuler</button>
+            {needsInput
+              ?<button className="btn-confirm" disabled={!val.trim()} onClick={()=>onConfirm(val)}>Confirmer</button>
+              :<button className={'btn-confirm'+(['del-cat','del-item'].includes(modal.type)?' btn-danger':'')} onClick={()=>onConfirm()}>
+                {modal.type==='reset-all'?'Reinitialiser':'Supprimer'}
+              </button>
+            }
+          </div>
+        )}
+        {needsCatSelect&&<div className="modal-actions"><button className="btn-cancel" onClick={onClose}>Annuler</button></div>}
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [data,setData]=useState(loadData);
+  const [modal,setModal]=useState(null);
+  const dragItem=useRef(null);
+  const dragOverItem=useRef(null);
+
+  useEffect(()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}},[data]);
+
+  function update(fn){setData(d=>{const nd=JSON.parse(JSON.stringify(d));fn(nd);return nd;});}
+
+  const tab=data.tabs[data.activeTab]||data.tabs[0];
+  const allItems=data.tabs.flatMap(t=>t.categories.flatMap(c=>c.items));
+  const checkedCount=allItems.filter(i=>i.checked).length;
+  const pct=allItems.length?Math.round(checkedCount/allItems.length*100):0;
+
+  function openModal(type,extra){setModal({type,...extra});}
+  function closeModal(){setModal(null);}
+
+  function handleConfirm(val){
+    if(!modal)return;
+    const{type,tabId,catId,itemId}=modal;
+    if(type==='add-item'){
+      update(d=>d.tabs.find(t=>t.id===tabId).categories.find(c=>c.id===catId).items.push({id:uid(),text:val.trim(),checked:false}));
+    }else if(type==='add-cat'){
+      update(d=>d.tabs.find(t=>t.id===tabId).categories.push({id:uid(),name:val.trim(),items:[]}));
+    }else if(type==='add-tab'){
+      update(d=>{d.tabs.push({id:uid(),label:val.trim(),categories:[]});d.activeTab=d.tabs.length-1;});
+    }else if(type==='del-cat'){
+      update(d=>{const t=d.tabs.find(t=>t.id===tabId);t.categories=t.categories.filter(c=>c.id!==catId);});
+    }else if(type==='del-item'){
+      update(d=>{const c=d.tabs.find(t=>t.id===tabId).categories.find(c=>c.id===catId);c.items=c.items.filter(i=>i.id!==itemId);});
+    }else if(type==='reset-all'){
+      update(d=>d.tabs.forEach(t=>t.categories.forEach(c=>c.items.forEach(i=>i.checked=false))));
+    }else if(type==='move-item'){
+      update(d=>{
+        const t=d.tabs.find(t=>t.id===tabId);
+        const srcCat=t.categories.find(c=>c.id===catId);
+        const item=srcCat.items.find(i=>i.id===itemId);
+        srcCat.items=srcCat.items.filter(i=>i.id!==itemId);
+        t.categories.find(c=>c.id===val).items.push(item);
+      });
+    }
+    closeModal();
+  }
+
+  function onDragStart(e,catId,itemId){dragItem.current={catId,itemId};e.dataTransfer.effectAllowed='move';}
+  function onDragOver(e,catId,itemId){e.preventDefault();dragOverItem.current={catId,itemId};}
+  function onDrop(e,toCatId,toItemId){
+    e.preventDefault();
+    if(!dragItem.current)return;
+    const{catId:fromCatId,itemId:fromItemId}=dragItem.current;
+    if(fromItemId===toItemId)return;
+    update(d=>{
+      const t=d.tabs[d.activeTab];
+      const fromCat=t.categories.find(c=>c.id===fromCatId);
+      const toCat=t.categories.find(c=>c.id===toCatId);
+      const item=fromCat.items.find(i=>i.id===fromItemId);
+      fromCat.items=fromCat.items.filter(i=>i.id!==fromItemId);
+      const toIdx=toCat.items.findIndex(i=>i.id===toItemId);
+      if(toIdx>=0)toCat.items.splice(toIdx,0,item);
+      else toCat.items.push(item);
+    });
+    dragItem.current=null;dragOverItem.current=null;
+  }
+
+  return(
+    <div>
+      <div className="header">
+        <h1>Packing <span>List</span> ✈️</h1>
+        <div className="prog-wrap"><div className="prog-bar" style={{width:pct+'%'}}></div></div>
+        <div className="prog-label">{checkedCount} / {allItems.length} articles coches ({pct}%)</div>
+        <div className="header-btns">
+          <button className={'hbtn hbtn-filter'+(data.hideChecked?' on':'')}
+            onClick={()=>update(d=>d.hideChecked=!d.hideChecked)}>
+            {data.hideChecked?'Voir tous':'Masquer coches'}
+          </button>
+          <button className="hbtn hbtn-reset" onClick={()=>openModal('reset-all',{})}>
+            Nouveau voyage
+          </button>
+        </div>
+      </div>
+
+      <div className="tabs">
+        {data.tabs.map((t,i)=>(
+          <div key={t.id} className={'tab'+(data.activeTab===i?' active':'')}
+            onClick={()=>update(d=>d.activeTab=i)}>{t.label}</div>
+        ))}
+        <div className="tab-add" onClick={()=>openModal('add-tab',{})}>+</div>
+      </div>
+
+      {tab&&(
+        <div className="page">
+          {tab.categories.map(cat=>{
+            const visibleItems=data.hideChecked?cat.items.filter(i=>!i.checked):cat.items;
+            const done=cat.items.filter(i=>i.checked).length;
+            return(
+              <div key={cat.id} className="section"
+                onDragOver={e=>{if(cat.items.length===0)e.preventDefault();}}
+                onDrop={e=>{if(cat.items.length===0)onDrop(e,cat.id,null);}}>
+                <div className="sec-head">
+                  <span className="sec-title">{cat.name}</span>
+                  <span className="sec-count">{done}/{cat.items.length}</span>
+                  <button className="sec-del" onClick={()=>openModal('del-cat',{tabId:tab.id,catId:cat.id})}>x</button>
+                </div>
+                {visibleItems.map(item=>(
+                  <ItemRow key={item.id} item={item}
+                    onToggle={()=>update(d=>{
+                      const it=d.tabs.find(t=>t.id===tab.id).categories.find(c=>c.id===cat.id).items.find(i=>i.id===item.id);
+                      it.checked=!it.checked;
+                    })}
+                    onEdit={newText=>update(d=>{
+                      const it=d.tabs.find(t=>t.id===tab.id).categories.find(c=>c.id===cat.id).items.find(i=>i.id===item.id);
+                      it.text=newText;
+                    })}
+                    onMove={()=>openModal('move-item',{tabId:tab.id,catId:cat.id,itemId:item.id})}
+                    onDelete={()=>openModal('del-item',{tabId:tab.id,catId:cat.id,itemId:item.id})}
+                    onDragStart={e=>onDragStart(e,cat.id,item.id)}
+                    onDragOver={e=>onDragOver(e,cat.id,item.id)}
+                    onDrop={e=>onDrop(e,cat.id,item.id)}
+                  />
+                ))}
+                {data.hideChecked&&done>0&&(
+                  <div className="masked-note">{done} article{done>1?'s':''} masque{done>1?'s':''}</div>
+                )}
+                <AddItemRow onAdd={text=>update(d=>d.tabs.find(t=>t.id===tab.id).categories.find(c=>c.id===cat.id).items.push({id:uid(),text,checked:false}))}/>
+              </div>
+            );
+          })}
+          <button className="add-cat-btn" onClick={()=>openModal('add-cat',{tabId:tab.id})}>+ Ajouter une categorie</button>
+        </div>
+      )}
+
+      <Modal modal={modal} onClose={closeModal} onConfirm={handleConfirm} categories={tab?tab.categories:[]}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
